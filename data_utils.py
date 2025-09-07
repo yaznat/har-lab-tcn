@@ -16,16 +16,17 @@ def build_temporal_dataset(
     Reserves the last `test_fraction` percentage of each contiguous activity sequence for testing. <p>
     Measurements are grouped into sequences according to temporal_dim, with one label per sequence.
     """
-    # "time", "person", and "activity" are not properly numerical measurements
+    # "time", "person", and "activity" are not proper numerical measurements
     columns_to_exclude = ["time", "person", "activity"] + (excluded_columns or [])
 
     X_train = []
     y_train = []
     X_test = []
     y_test = []
-    label = 0
+    
+    label = 0 # Incremented after each person
 
-    # Load file by file since each file is one class
+    # Load file by file since each file is one class (one person)
     for file_name in sorted(glob(directory_path + "/*.csv")):
         raw = pd.read_csv(file_name)
         
@@ -37,6 +38,7 @@ def build_temporal_dataset(
         
         # Filter by activity types if specified
         if activity_types is not None:
+            # Remove data from unspecified activities
             raw = raw[raw['activity'].isin(activity_types)]
             if len(raw) == 0:
                 print(f"Skipping {file_name}: no data for activities {activity_types}")
@@ -94,7 +96,6 @@ def build_temporal_dataset(
             X_test.extend(person_X_test)
             y_test.extend(person_y_test)
         
-        # New file, new person - increment label by 1
         label += 1
     
     # Concatenate all data
